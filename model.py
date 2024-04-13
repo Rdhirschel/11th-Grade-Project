@@ -6,7 +6,7 @@ from DL3 import *
 import numpy as np
 
 
-IMAGE_SIZE = (32, 128)
+IMAGE_SIZE = (128, 128)
 count = 0
 
 # avoid too much data - if over 250 images per class, only take 250
@@ -78,18 +78,12 @@ Xtest = Xtest.T
 np.random.seed(42) # the meaning of life, the universe, and everything - Douglas Adams (also a great seed) 
 random.seed(42) 
 
-model = DLModel()
+model = DLModel(name="Flower_Classification_Model")
+model.add(DLLayer(name="First Layer", num_units=64, input_shape=(3*IMAGE_SIZE[0]*IMAGE_SIZE[1],), activation="relu", W_initialization="random", learning_rate=0.05))
 
-HiddenLayer1 = DLLayer("Hidden Layer 1", 256, (3*IMAGE_SIZE[0]*IMAGE_SIZE[1],), activation="leaky_relu", W_initialization="random", learning_rate=0.4, random_scale=0.1)
-model.add(HiddenLayer1)
+model.add(DLLayer(name="Output", num_units=5, input_shape=(64,), activation="trim_softmax", W_initialization="random", learning_rate=0.07))
+model.compile(loss="categorical_cross_entropy", threshold=0.5)
 
-HiddenLayer2 = DLLayer("Hidden Layer 2", 64, (256,), activation="trim_sigmoid", W_initialization="random", learning_rate=1, random_scale=1)
-model.add(HiddenLayer2)
-
-OutputLayer = DLLayer("Output Layer", 6, (64,), activation="trim_softmax", W_initialization="random", learning_rate=0.1, random_scale=0.001)
-model.add(OutputLayer)
-
-model.compile("categorical_cross_entropy")
 
 costs = model.train(Xtrain, Ytrain, 300)
 plt.plot(np.squeeze(costs))

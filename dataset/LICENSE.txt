@@ -1,5 +1,4 @@
 The images are taken from: https://www.kaggle.com/datasets/imsparsh/flowers-dataset?resource=download 
-The other images are taken from: https://www.kaggle.com/datasets/ezzzio/random-images
 
 All images in this archive are licensed under the Creative Commons By-Attribution License, available at:
 https://creativecommons.org/licenses/by/2.0/
