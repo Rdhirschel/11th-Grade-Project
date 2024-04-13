@@ -83,11 +83,6 @@ class DLLayer():
 
         self.init_weights(W_initialization)
 
-    #def forward_propagation():
-
-    #def backward_propagation():
-
-    #def update_parameters():
 
     def _sigmoid(self, Z):
         return 1 / (1 + np.exp(-Z))

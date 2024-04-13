@@ -1,96 +1,50 @@
 import os
 from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
-from PIL import Image
+import pandas as pd
 from DL3 import *
 import numpy as np
+from sklearn.preprocessing import LabelEncoder, MinMaxScaler
+import seaborn as sns
 
+def load_train_data():
+    df= pd.read_csv('dataset\ObesityDataSet_raw_and_data_sinthetic.csv')
 
-IMAGE_SIZE = (128, 128)
-count = 0
+    df = df.dropna()
+    df = df.drop_duplicates()
 
-# avoid too much data - if over 250 images per class, only take 250
+    # Minmax Scaler - normalizes the data to range [0,1] -> [-0.5, 0.5] after the -0.5
+    mms = MinMaxScaler()
+    df[["Age", "Height", "Weight", "FCVC", "NCP", "CH2O", "TUE", "FAF"]] = mms.fit_transform(df[["Age", "Height", "Weight", "FCVC", "NCP", "CH2O", "TUE", "FAF"]]) - 0.5
 
-def load_train_data(folder_path):
-    global count
-    X = []
-    Y = []
-    class_names = ["daisy", "dandelion", "rose", "sunflower", "tulip", "other"]
+    lb = LabelEncoder()
+    df[["Gender", "CALC", "FAVC", "SCC", "SMOKE", "family_history_with_overweight", "MTRANS", "CAEC", "NObeyesdad"]] = df[["Gender", "CALC", "FAVC", "SCC", "SMOKE", "family_history_with_overweight", "MTRANS", "CAEC", "NObeyesdad"]].apply(lb.fit_transform)
 
-    for i, class_name in enumerate(class_names):
-        currX = []
-        currY = []
-        cnt = 0
-        class_path = os.path.join(folder_path, class_name)
-        for image_name in os.listdir(class_path):
-            cnt += 1
-            if (cnt == 250):
-                break
-            image_path = os.path.join(class_path, image_name)
-            image = Image.open(image_path)
-            image = image.resize(IMAGE_SIZE)
-            
-            # Convert grayscale images to RGB format
-            if image.mode != 'RGB':
-                image = image.convert('RGB')
-                
-            image_array = np.array(image).reshape(3*IMAGE_SIZE[0]*IMAGE_SIZE[1],)
-            currX.append(image_array)
-            currY.append(i)
-            count += 1
-            if count % 249 == 0:
-                print(i)
-        X.append(currX)
-        Y.append(currY)
-    
+    Y = df["NObeyesdad"].to_numpy()
+    X = df.drop(columns=["NObeyesdad"]).to_numpy()
     return X, Y
 
+# Load the data
+X, Y = load_train_data()
 
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.4, random_state=42)
+X_train = X_train.T
+X_test = X_test.T
 
+np.random.seed(1)
 
-X, Y = load_train_data('dataset/train')
-for i in range(len(X)):
-    X[i] = np.array(X[i])
-    X[i] = X[i] / 255.0 - 0.5
-    Y[i] = np.array(Y[i])
+# Define the model
+model = DLModel("Obesity Classifier")
+model.add(DLLayer("Hidden Layer 1", 64, (X_train.shape[0],), "relu", "random", 0.001, random_scale=0.1))
+model.add(DLLayer("Hidden Layer 2", 32, (64,), "sigmoid", "random", 0.006, random_scale=0.1))
+model.add(DLLayer("Output Layer", len(np.unique(Y)), (32,), "trim_softmax", "He", 0.025))
 
-Xtrain, Xtest, Ytrain, Ytest = [], [], [], []
-for i in range(len(X)):
-    Xtrain_class, Xtest_class, Ytrain_class, Ytest_class = train_test_split(X[i], Y[i], test_size=0.3)
-    # dont add the lists but the elements of the lists
-    for element in Xtrain_class:
-        Xtrain.append(element)
-    for element in Xtest_class:
-        Xtest.append(element)
-    for element in Ytrain_class:
-        Ytrain.append(element)
-    for element in Ytest_class:
-        Ytest.append(element)
-
-Xtrain = np.array(Xtrain)
-Xtest = np.array(Xtest)
-Ytrain = np.array(Ytrain)
-Ytest = np.array(Ytest)
-
-Xtrain = Xtrain.T
-Xtest = Xtest.T
-
-np.random.seed(42) # the meaning of life, the universe, and everything - Douglas Adams (also a great seed) 
-random.seed(42) 
-
-model = DLModel(name="Flower_Classification_Model")
-model.add(DLLayer(name="First Layer", num_units=64, input_shape=(3*IMAGE_SIZE[0]*IMAGE_SIZE[1],), activation="relu", W_initialization="random", learning_rate=0.05))
-
-model.add(DLLayer(name="Output", num_units=5, input_shape=(64,), activation="trim_softmax", W_initialization="random", learning_rate=0.07))
-model.compile(loss="categorical_cross_entropy", threshold=0.5)
-
-
-costs = model.train(Xtrain, Ytrain, 300)
+model.compile("categorical_cross_entropy")
+costs = model.train(X_train, Y_train, 10000)
 plt.plot(np.squeeze(costs))
 plt.ylabel('cost')
-plt.xlabel('iterations (per 2s)')
+plt.xlabel('iterations')
 plt.show()
-print("train accuracy:", np.mean(model.predict(Xtrain) == Ytrain))
-print("test accuracy:", np.mean(model.predict(Xtest) == Ytest))
 
-#model.save_weights("./weights")
+print("train accuracy:", np.mean(model.predict(X_train) == Y_train))
+print("test accuracy:", np.mean(model.predict(X_test) == Y_test))
