@@ -1,1 +1,1 @@
-https://www.kaggle.com/datasets/mexwell/heart-disease-dataset/data?select=heart_statlog_cleveland_hungary_final.csv
+https://www.kaggle.com/datasets/iabhishekofficial/mobile-price-classification?select=train.csv
