@@ -3,41 +3,78 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from DL3 import *
 import numpy as np
-from sklearn.preprocessing import StandardScaler
+from PIL import Image
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
 import seaborn as sns
 
-def load_train_data():
-    df = pd.read_csv("dataset\\train.csv")
-    
+IMAGE_SIZE = (128, 128)
 
-    df = df.dropna().drop_duplicates()
+def load_train_data(image_directory="dataset\\train", valdirectory="dataset\\val"):
+    X_train, X_test, Y_train, Y_test = [], [], [], []
 
-    # Normalize the data to range [-1, 1]
-    scaler = StandardScaler()
+    classNames = os.listdir(image_directory)
+    for folder_name in os.listdir(image_directory):
+        count = 0
+        for file_name in os.listdir(os.path.join(image_directory, folder_name)):
+            count += 1
+            img = Image.open(os.path.join(image_directory, folder_name, file_name))
+            img = img.resize(IMAGE_SIZE)    
+            if (img.mode != "RGB"):
+                img = img.convert("RGB")
 
-    Y = df["price_range"].to_numpy()
-    X = scaler.fit_transform(df.drop(columns=["price_range"]))
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
-    
+
+            img_array = np.array(img).reshape(IMAGE_SIZE[0]*IMAGE_SIZE[1]*3,) / 255.0 - 0.5
+            X_train.append(img_array)
+            Y_train.append(folder_name)
+
+            print(f"Loaded {folder_name}/{file_name}")
+            if (count == 250):
+                break
+
+    for folder_name in os.listdir(valdirectory):
+        count = 0
+        for file_name in os.listdir(os.path.join(valdirectory, folder_name)):
+            count += 1
+            img = Image.open(os.path.join(valdirectory, folder_name, file_name))
+            img = img.resize(IMAGE_SIZE)
+            if (img.mode != "RGB"):
+                img = img.convert("RGB")
+
+            img_array = np.array(img).reshape(IMAGE_SIZE[0]*IMAGE_SIZE[1]*3,) / 255.0 - 0.5
+
+            X_test.append(img_array)
+            Y_test.append(folder_name)
+
+            print(f"Loaded {folder_name}/{file_name}")
+            if (count == 250):
+                break
+
+    # one hot encoding
+    encoder = OneHotEncoder()
+    Y_train = encoder.fit_transform(np.array(Y_train).reshape(-1, 1)).toarray()
+    Y_test = encoder.transform(np.array(Y_test).reshape(-1, 1)).toarray()
+    X_test = np.array(X_test)
+    X_train = np.array(X_train)
+
     return X_train, X_test, Y_train, Y_test
 
 
 # Load the data
 X_train, X_test, Y_train, Y_test = load_train_data()
+Y_test = Y_test.T
+Y_train = Y_train.T
 X_train = X_train.T
 X_test = X_test.T
 
-np.random.seed(23)
+np.random.seed(19)
 
 
 # Define the model
 model = DLModel("Price Range Classifier")
-model.add(DLLayer("Hidden Layer 1",  256, (X_train.shape[0],), activation="relu", W_initialization="random", learning_rate=0.01, random_scale=0.01))
-model.add(DLLayer("Hidden Layer 2", 512, (256,), activation="relu", W_initialization="random", learning_rate=0.01, random_scale=0.01))
-model.add(DLLayer("Hidden Layer 4", 128, (512,), activation="trim_sigmoid", W_initialization="random", learning_rate=0.01, random_scale=0.01))
-model.add(DLLayer("Output Layer", 4, (1280,), activation="trim_softmax", W_initialization="random", learning_rate=0.01, random_scale=0.01))
+model.add(DLLayer("Hidden Layer 1",  40, (X_train.shape[0],), activation="trim_sigmoid", W_initialization="random", learning_rate=0.02, random_scale=0.01))
+model.add(DLLayer("Output Layer", 14, (40,), activation="trim_softmax", W_initialization="random", learning_rate=0.01, random_scale=0.01))
 model.compile("categorical_cross_entropy")
-costs = model.train(X_train, Y_train, 1000)
+costs = model.train(X_train, Y_train, 1_000)
 plt.plot(np.squeeze(costs))
 plt.ylabel('cost')
 plt.xlabel('iterations')
@@ -45,3 +82,6 @@ plt.show()
 
 print("train accuracy:", np.mean(model.predict(X_train) == Y_train))
 print("test accuracy:", np.mean(model.predict(X_test) == Y_test))
+model.confusion_matrix(X_test, Y_test)
+
+model.save_weights("saved_weights")

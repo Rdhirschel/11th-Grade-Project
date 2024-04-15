@@ -11,9 +11,9 @@ class DLLayer():
         if not os.path.exists(path):
             os.makedirs(path)
 
-            with h5py.File(path+"/"+file_name+'.h5', 'w') as hf:
-                hf.create_dataset("W", data=self.W)
-                hf.create_dataset("b", data=self.b)
+        with h5py.File(path+"/"+file_name+'.h5', 'w') as hf:
+            hf.create_dataset("W", data=self.W)
+            hf.create_dataset("b", data=self.b)
 
     def init_weights(self, W_initialization):
         self.b = np.zeros((self._num_units,1), dtype=float)
