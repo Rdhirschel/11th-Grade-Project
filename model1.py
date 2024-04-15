@@ -28,7 +28,7 @@ def load_train_data(image_directory="dataset\\train"):
             Y.append(folder_name)
 
             print(f"Loaded {folder_name}/{file_name}")
-            if (count == 500):
+            if (count == 723): # 723 images is minimum in astlibe folder, and we want to keep the data balanced
                 break
 
     # one hot encoding
@@ -36,7 +36,7 @@ def load_train_data(image_directory="dataset\\train"):
     Y = encoder.fit_transform(np.array(Y).reshape(-1, 1)).toarray()
     X = np.array(X)
 
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.35, random_state=42)
 
     return X_train, X_test, Y_train, Y_test
 
@@ -52,9 +52,9 @@ np.random.seed(19)
 
 
 # Define the model
-model = DLModel("Price Range Classifier")
-model.add(DLLayer("Hidden Layer 1",  40, (X_train.shape[0],), activation="trim_sigmoid", W_initialization="random", learning_rate=0.02, random_scale=0.01))
-model.add(DLLayer("Output Layer", 14, (40,), activation="trim_softmax", W_initialization="random", learning_rate=0.01, random_scale=0.01))
+model = DLModel("Flower type Classifier")
+model.add(DLLayer("Hidden Layer 1",  40, (X_train.shape[0],), activation="trim_sigmoid", W_initialization="random", learning_rate=0.1, random_scale=0.01))
+model.add(DLLayer("Output Layer", 14, (40,), activation="trim_softmax", W_initialization="random", learning_rate=0.05, random_scale=0.01))
 model.compile("categorical_cross_entropy")
 costs = model.train(X_train, Y_train, 1_000)
 plt.plot(np.squeeze(costs))
@@ -64,6 +64,10 @@ plt.show()
 
 print("train accuracy:", np.mean(model.predict(X_train) == Y_train))
 print("test accuracy:", np.mean(model.predict(X_test) == Y_test))
+
+# example
+print(model.predict(X_test[0, :]))
+print(Y_test[0, :])
 model.confusion_matrix(X_test, Y_test)
 
 model.save_weights("saved_weights")
