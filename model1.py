@@ -9,8 +9,8 @@ import seaborn as sns
 
 IMAGE_SIZE = (128, 128)
 
-def load_train_data(image_directory="dataset\\train", valdirectory="dataset\\val"):
-    X_train, X_test, Y_train, Y_test = [], [], [], []
+def load_train_data(image_directory="dataset\\train"):
+    X, Y = [], []
 
     classNames = os.listdir(image_directory)
     for folder_name in os.listdir(image_directory):
@@ -24,37 +24,19 @@ def load_train_data(image_directory="dataset\\train", valdirectory="dataset\\val
 
 
             img_array = np.array(img).reshape(IMAGE_SIZE[0]*IMAGE_SIZE[1]*3,) / 255.0 - 0.5
-            X_train.append(img_array)
-            Y_train.append(folder_name)
+            X.append(img_array)
+            Y.append(folder_name)
 
             print(f"Loaded {folder_name}/{file_name}")
-            if (count == 250):
-                break
-
-    for folder_name in os.listdir(valdirectory):
-        count = 0
-        for file_name in os.listdir(os.path.join(valdirectory, folder_name)):
-            count += 1
-            img = Image.open(os.path.join(valdirectory, folder_name, file_name))
-            img = img.resize(IMAGE_SIZE)
-            if (img.mode != "RGB"):
-                img = img.convert("RGB")
-
-            img_array = np.array(img).reshape(IMAGE_SIZE[0]*IMAGE_SIZE[1]*3,) / 255.0 - 0.5
-
-            X_test.append(img_array)
-            Y_test.append(folder_name)
-
-            print(f"Loaded {folder_name}/{file_name}")
-            if (count == 250):
+            if (count == 500):
                 break
 
     # one hot encoding
     encoder = OneHotEncoder()
-    Y_train = encoder.fit_transform(np.array(Y_train).reshape(-1, 1)).toarray()
-    Y_test = encoder.transform(np.array(Y_test).reshape(-1, 1)).toarray()
-    X_test = np.array(X_test)
-    X_train = np.array(X_train)
+    Y = encoder.fit_transform(np.array(Y).reshape(-1, 1)).toarray()
+    X = np.array(X)
+
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
 
     return X_train, X_test, Y_train, Y_test
 
