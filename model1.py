@@ -7,36 +7,64 @@ from PIL import Image
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 import seaborn as sns
 
-IMAGE_SIZE = (128, 128)
+IMAGE_SIZE = (32, 32) # 256x256 gives same results but takes too much time
+classNames = ["tulip", "sunflower", "rose", "dandelion", "iris"]
 
 def load_train_data(image_directory="dataset\\train"):
-    X, Y = [], []
+    X_train, X_test, Y_train, Y_test = [], [], [], []
 
-    classNames = os.listdir(image_directory)
-    for folder_name in os.listdir(image_directory):
+    # common_daisy, tulip, sunflower, rose, dandelion, iris were selected as the classes
+    global classNames
+    for _class in classNames:
         count = 0
-        for file_name in os.listdir(os.path.join(image_directory, folder_name)):
+        currX = []
+        currY = []
+        for file_name in os.listdir(os.path.join(image_directory, _class)):
             count += 1
-            img = Image.open(os.path.join(image_directory, folder_name, file_name))
+            img = Image.open(os.path.join(image_directory, _class, file_name))
             img = img.resize(IMAGE_SIZE)    
             if (img.mode != "RGB"):
-                img = img.convert("RGB")
-
+                count -= 1
+                continue
+            #if (count % 50 == 0):
+                #img.show()
 
             img_array = np.array(img).reshape(IMAGE_SIZE[0]*IMAGE_SIZE[1]*3,) / 255.0 - 0.5
-            X.append(img_array)
-            Y.append(folder_name)
+            currX.append(img_array)
+            currY.append(_class)
 
-            print(f"Loaded {folder_name}/{file_name}")
-            if (count == 723): # 723 images is minimum in astlibe folder, and we want to keep the data balanced
+            print(f"Loaded {_class}/{file_name}")
+            if (count == 923): # 923 images is minimum in rose folder
                 break
+
+        # split the data set equally
+        currX_train, currX_test, currY_train, currY_test = train_test_split(currX, currY, test_size=0.2, random_state=42)
+        for element in currX_train:
+            X_train.append(element)
+        
+        for element in currX_test:
+            X_test.append(element)
+        
+        for element in currY_train:
+            Y_train.append(element)
+        
+        for element in currY_test:
+            Y_test.append(element) 
 
     # one hot encoding
     encoder = OneHotEncoder()
-    Y = encoder.fit_transform(np.array(Y).reshape(-1, 1)).toarray()
-    X = np.array(X)
+    Y_test = encoder.fit_transform(np.array(Y_test).reshape(-1, 1)).toarray()
+    Y_train = encoder.fit_transform(np.array(Y_train).reshape(-1, 1)).toarray()
+    X_train = np.array(X_train)
+    X_test = np.array(X_test)
 
-    X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.35, random_state=42)
+
+    print("\n\nData loaded successfully\n\n")
+    print(f"X_train shape: {X_train.shape}")
+    print(f"Y_train shape: {Y_train.shape}")
+    print(f"X_test shape: {X_test.shape}")
+    print(f"Y_test shape: {Y_test.shape}")
+    print("\n\n")
 
     return X_train, X_test, Y_train, Y_test
 
@@ -53,21 +81,25 @@ np.random.seed(19)
 
 # Define the model
 model = DLModel("Flower type Classifier")
-model.add(DLLayer("Hidden Layer 1",  40, (X_train.shape[0],), activation="trim_sigmoid", W_initialization="random", learning_rate=0.1, random_scale=0.01))
-model.add(DLLayer("Output Layer", 14, (40,), activation="trim_softmax", W_initialization="random", learning_rate=0.05, random_scale=0.01))
+model.add(DLLayer("Hidden Layer 1",  512, (X_train.shape[0],), activation="relu", W_initialization="He", learning_rate=0.2, random_scale=0.01))
+model.add(DLLayer("Hidden Layer 2",  128, (512,), activation="trim_sigmoid", W_initialization="He", learning_rate=0.15, random_scale=0.01))
+model.add(DLLayer("Hidden Layer 3",  64, (128,), activation="trim_tanh", W_initialization="He", learning_rate=0.1, random_scale=0.01))
+model.add(DLLayer("Hidden Layer 3",  len(classNames), (64,), activation="trim_softmax", W_initialization="He", learning_rate=0.1, random_scale=0.01))
 model.compile("categorical_cross_entropy")
-costs = model.train(X_train, Y_train, 1_000)
+costs = model.train(X_train, Y_train, 1200)
 plt.plot(np.squeeze(costs))
 plt.ylabel('cost')
 plt.xlabel('iterations')
 plt.show()
 
-print("train accuracy:", np.mean(model.predict(X_train) == Y_train))
-print("test accuracy:", np.mean(model.predict(X_test) == Y_test))
+# Calculate the accuracy
+train_accuracy = np.sum(np.argmax(model.predict(X_train), axis=0) == np.argmax(Y_train, axis=0)) / Y_train.shape[1]
+test_accuracy = np.sum(np.argmax(model.predict(X_test), axis=0) == np.argmax(Y_test, axis=0)) / Y_test.shape[1]
+
+print("train accuracy:", train_accuracy)
+print("test accuracy:", test_accuracy)
 
 # example
-print(model.predict(X_test[0, :]))
-print(Y_test[0, :])
 model.confusion_matrix(X_test, Y_test)
 
-model.save_weights("saved_weights")
+model.save_weights(f"saved_weights {round(test_accuracy, 4) * 100}%")

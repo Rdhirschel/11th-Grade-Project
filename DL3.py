@@ -220,8 +220,14 @@ class DLLayer():
         plt.title("W histogram")
         plt.show()
 
-        return s;
-
+        return s
+    
+    def load_weights(self, path, file_name):
+        with h5py.File(path+"/"+file_name+'.h5', 'r') as hf:
+            self.W = hf['W'][:]
+            self.b = hf['b'][:]
+            self.num_units = self.W.shape[0]
+            self.input_shape = self.W.shape[1:]
 
 
 
@@ -238,6 +244,15 @@ class DLModel():
         for i in range(1, len(self.layers)): #Check for every layer
             file_name = "Layer" + str(i) #i is from 1 to max, so Layer1, Layer2 etc
             self.layers[i].save_weights(path, file_name)
+
+    def load_weights(self, path):
+        files = os.listdir(path)
+
+        for i, file_name in enumerate(files, start=1):
+            file_path = os.path.join(path, file_name)
+            self.layers.append(DLLayer(num_units=2, input_shape=(1,)).load_weights(file_path, file_name))
+
+
 
     def compile(self, loss, threshold=0.5):
         self.loss = loss

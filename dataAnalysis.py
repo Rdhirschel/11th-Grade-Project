@@ -8,6 +8,7 @@ import seaborn as sns
 # check how many images are in each folder
 def check_image_count(image_directory="dataset\\train"):
     min = 1000000000
+    sum = 0
     classNames = os.listdir(image_directory)
     for folder_name in os.listdir(image_directory):
         count = 0
@@ -19,7 +20,9 @@ def check_image_count(image_directory="dataset\\train"):
         if count < min:
             min = count
         print(f"Folder {folder_name} has {count} images") # for equal data, each folder should have the same number of images
+        sum += count
 
     print (f"Minimum number of images in a folder is {min}")
+    print (f"Total number of images is {sum}")
 
 check_image_count()
