@@ -34,7 +34,7 @@ def load_train_data(image_directory="dataset\\train"):
             currY.append(_class)
 
             print(f"Loaded {_class}/{file_name}")
-            if (count == 923): # 923 images is minimum in rose folder
+            if (count == 986): # 986 images is minimum in rose folder
                 break
 
         # split the data set equally
@@ -86,7 +86,7 @@ model.add(DLLayer("Hidden Layer 2",  128, (512,), activation="trim_sigmoid", W_i
 model.add(DLLayer("Hidden Layer 3",  64, (128,), activation="trim_tanh", W_initialization="He", learning_rate=0.1, random_scale=0.01))
 model.add(DLLayer("Hidden Layer 3",  len(classNames), (64,), activation="trim_softmax", W_initialization="He", learning_rate=0.1, random_scale=0.01))
 model.compile("categorical_cross_entropy")
-costs = model.train(X_train, Y_train, 1200)
+costs = model.train(X_train, Y_train, 1500)
 plt.plot(np.squeeze(costs))
 plt.ylabel('cost')
 plt.xlabel('iterations')
