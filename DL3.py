@@ -222,12 +222,14 @@ class DLLayer():
 
         return s
     
-    def load_weights(self, path, file_name):
-        with h5py.File(path+"/"+file_name+'.h5', 'r') as hf:
+    def load_weights(self, file_name, activation):
+        with h5py.File(file_name, 'r') as hf:
+
             self.W = hf['W'][:]
             self.b = hf['b'][:]
-            self.num_units = self.W.shape[0]
-            self.input_shape = self.W.shape[1:]
+            self.__init__("Loaded Layer", self.W.shape[0], self.W.shape[1:], activation=activation)
+            self.W = hf['W'][:]
+            self.b = hf['b'][:]
 
 
 
@@ -245,12 +247,16 @@ class DLModel():
             file_name = "Layer" + str(i) #i is from 1 to max, so Layer1, Layer2 etc
             self.layers[i].save_weights(path, file_name)
 
-    def load_weights(self, path):
+    def load_weights(self, path, activations, loss, threshold=0.5):
         files = os.listdir(path)
+        self.__init__("Loaded Model")
 
-        for i, file_name in enumerate(files, start=1):
-            file_path = os.path.join(path, file_name)
-            self.layers.append(DLLayer(num_units=2, input_shape=(1,)).load_weights(file_path, file_name))
+        for i, file_name in enumerate(files, start=0):
+            file_name = os.path.join(path, file_name)
+            self.add(DLLayer("something", num_units=2, input_shape=(1,)))
+            self.layers[i+1].load_weights(file_name, activations[i])
+        
+        self.compile(loss, threshold)
 
 
 
@@ -314,7 +320,6 @@ class DLModel():
 
     def _squared_means_backward(self, AL, Y):
         return 2 * (AL - Y)
-
 
     def _cross_entropy(self, AL, Y):
         return np.where(Y == 0, -np.log(1 - AL), -np.log(AL))

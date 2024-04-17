@@ -54,7 +54,9 @@ def load_train_data(image_directory="dataset\\train"):
     # one hot encoding
     encoder = OneHotEncoder()
     Y_test = encoder.fit_transform(np.array(Y_test).reshape(-1, 1)).toarray()
+    print(list(encoder.categories_))
     Y_train = encoder.fit_transform(np.array(Y_train).reshape(-1, 1)).toarray()
+    print(list(encoder.categories_))
     X_train = np.array(X_train)
     X_test = np.array(X_test)
 

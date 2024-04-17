@@ -9,8 +9,9 @@ import seaborn as sns
 def check_image_count(image_directory="dataset\\train"):
     min = 1000000000
     sum = 0
+    #classNames = ["tulip", "sunflower", "rose", "dandelion", "iris"]
     classNames = os.listdir(image_directory)
-    for folder_name in os.listdir(image_directory):
+    for folder_name in classNames:
         count = 0
         for file_name in os.listdir(os.path.join(image_directory, folder_name)):
             count += 1
