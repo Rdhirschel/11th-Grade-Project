@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<!--Script hosted on vercel, linked in the github-->
+<html>
+<head>
+    <title>Final Project Website</title>
+    <style>
+        * {
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: #93b8d1;
+        }
+
+        .imageContainer {
+            border: 5px solid black;
+            width: 450px;
+            height: 450px;
+            border-radius: 10px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background-color: #bdd8dc; 
+        }
+        h1 {
+            text-align: center;
+            margin: 0 auto;
+        }
+        h3 {
+            text-align: center;
+            margin: 0 auto;
+            border: 0 auto;
+        }
+        div {
+            margin: 0 auto;
+            width: 50%;
+            text-align: center;
+        }
+        input {
+            margin: 10px;
+        }
+        #result {
+            margin: 10px;
+            text-align: center;
+            font-size: 24px;
+        }
+        button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            display: center;
+            margin-top: 10px; 
+            padding: 5px 10px; 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Flower Classification</h1>
+    <h3 >Possible options: Iris, Dandelion, Rose, Sunflower and Tulip</h3>
+    <button style="display: block; margin: 0 auto;" onclick="window.location.href='https://github.com/Rdhirschel/11th-Grade-Project'">
+        <img src="https://github.githubassets.com/images/icons/emoji/octocat.png" alt="Github" width="20" height="20">
+        View on GitHub
+    </button>
+    <div style="justify-content: flex-end;">
+        <h4 style="margin:7px;">Upload an image of a flower to classify it</h4>
+        <div id="imageContainer" class="imageContainer"></div>
+        <img id="uploadedImage" src="#" alt="Uploaded Image" style="display: none;">
+        <input type="file" id="imageUpload" accept="image/*" onchange="displayImage(event)" style="display: none;">   
+        <button onclick="document.getElementById('imageUpload').click()">Upload Image</button> 
+        <button id="classify">Classify</button>
+        <h2 id="result"></h2>
+
+    </div>
+    
+
+    <script>
+        document.getElementById('classify').addEventListener('click', function() {
+            var imageFile = document.getElementById('imageUpload').files[0];
+            var reader = new FileReader();
+
+            reader.onload = function(e) {
+                var img = new Image();
+                img.onload = function() {
+                    var canvas = document.createElement('canvas');
+                    var ctx = canvas.getContext('2d');
+                    //convert to rgb
+                    canvas.style.display = 'none';
+                    canvas.displayImage = 'none';
+
+                    // Resize the image to 32x32
+                    canvas.width = 32;
+                    canvas.height = 32;
+                    ctx.drawImage(img, 0, 0, 32, 32);
+
+                    // Get the pixel data
+                    var pixelData = ctx.getImageData(0, 0, 32, 32).data;
+                    var rgbData = [];
+                    for (var i = 0; i < pixelData.length; i += 4) {
+                        rgbData.push(pixelData[i], pixelData[i+1], pixelData[i+2]);
+                    }
+                    //console.log(rgbData);
+                    //console.log(Array.from(rgbData));
+
+                    // Send the pixel data to the server
+                    var xhr = new XMLHttpRequest();
+                    xhr.open('POST', 'https://rdhirschel.pythonanywhere.com/', true);
+                    xhr.onload = function() {
+                        if (this.status == 200) {
+                            var result = JSON.parse(this.responseText);
+                            document.getElementById('result').innerText = "This is a " + result.label;
+                        }
+                    };
+                    xhr.setRequestHeader("Content-Type", "application/json");
+                    json = JSON.stringify({data: Array.from(rgbData)});
+                    //console.log(json);          
+                    xhr.send(json);
+                };
+                img.src = e.target.result;
+            };
+
+            // read the json information
+            reader.readAsDataURL(imageFile);
+        });
+
+        async function displayImage(event) {
+            const uploadedImage = document.getElementById('uploadedImage');
+            const imageContainer = document.getElementById('imageContainer');
+            const label = document.getElementById('result');
+            label.innerText = "";
+            uploadedImage.src = URL.createObjectURL(event.target.files[0]);
+            imageContainer.style.backgroundImage = `url(${uploadedImage.src})`;
+            imageContainer.style.backgroundSize = 'cover';
+        }
+        
+    </script>
+</body>
+</html>

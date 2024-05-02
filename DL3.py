@@ -224,7 +224,6 @@ class DLLayer():
     
     def load_weights(self, file_name, activation):
         with h5py.File(file_name, 'r') as hf:
-
             self.W = hf['W'][:]
             self.b = hf['b'][:]
             self.__init__("Loaded Layer", self.W.shape[0], self.W.shape[1:], activation=activation)
