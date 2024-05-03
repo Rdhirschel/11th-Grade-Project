@@ -7,7 +7,7 @@ import numpy as np
 app = Flask(__name__)
 CORS(app, origins="*")
 
-@app.route('/', methods=['POST', 'OPTIONS'])
+@app.route('/classify', methods=['POST', 'OPTIONS'])
 @cross_origin(origin='*', headers=['Content-Type','Authorization'])
 def classify_image():
     @after_this_request

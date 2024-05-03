@@ -115,7 +115,7 @@
 
                     // Send the pixel data to the server
                     var xhr = new XMLHttpRequest();
-                    xhr.open('POST', 'https://rdhirschel.pythonanywhere.com/', true);
+                    xhr.open('POST', 'https://rdhirschel.pythonanywhere.com/classify', true);
                     xhr.onload = function() {
                         if (this.status == 200) {
                             var result = JSON.parse(this.responseText);
