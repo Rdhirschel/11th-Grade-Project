@@ -147,6 +147,7 @@
                 };
                 img.src = e.target.result;
             };
+            document.getElementById('result').innerText = "";
             document.getElementById('result').classList.add('loading');
             // read the json information
             reader.readAsDataURL(imageFile);
