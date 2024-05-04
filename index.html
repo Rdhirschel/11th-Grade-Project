@@ -157,8 +157,8 @@
             const uploadedImage = document.getElementById('uploadedImage');
             const imageContainer = document.getElementById('imageContainer');
             const label = document.getElementById('result');
-            document.getElementById('result').classList.remove('loading');
             label.innerText = "";
+            label.classList.remove('loading');
             uploadedImage.src = URL.createObjectURL(event.target.files[0]);
             imageContainer.style.backgroundImage = `url(${uploadedImage.src})`;
             imageContainer.style.backgroundSize = 'cover';
