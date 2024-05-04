@@ -11,6 +11,8 @@
             font-family: Arial, sans-serif;
         }
 
+        
+
         body {
             background-color: #93b8d1;
         }
@@ -63,6 +65,19 @@
         }
         button:hover {
             background-color: #0056b3;
+        }
+
+        @keyframes ellipsis {
+            0% { content: "Awaiting model"; }
+            33% { content: "Awaiting model."; }
+            66% { content: "Awaiting model.."; }
+            100% { content: "Awaiting model..."; }
+        }
+
+        .loading:after {
+            visibility: visible;
+            content: "Awaiting model";
+            animation: ellipsis 3s infinite;
         }
     </style>
 </head>
@@ -119,7 +134,10 @@
                     xhr.onload = function() {
                         if (this.status == 200) {
                             var result = JSON.parse(this.responseText);
-                            document.getElementById('result').innerText = "This is a " + result.label;
+                            if (document.getElementById('result').classList.contains('loading')) {
+                                document.getElementById('result').classList.remove('loading');
+                                document.getElementById('result').innerText = "This is a " + result.label;
+                            }
                         }
                     };
                     xhr.setRequestHeader("Content-Type", "application/json");
@@ -129,7 +147,7 @@
                 };
                 img.src = e.target.result;
             };
-
+            document.getElementById('result').classList.add('loading');
             // read the json information
             reader.readAsDataURL(imageFile);
         });
@@ -138,6 +156,7 @@
             const uploadedImage = document.getElementById('uploadedImage');
             const imageContainer = document.getElementById('imageContainer');
             const label = document.getElementById('result');
+            document.getElementById('result').classList.remove('loading');
             label.innerText = "";
             uploadedImage.src = URL.createObjectURL(event.target.files[0]);
             imageContainer.style.backgroundImage = `url(${uploadedImage.src})`;
