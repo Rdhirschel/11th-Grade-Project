@@ -94,14 +94,12 @@ plt.ylabel('cost')
 plt.xlabel('iterations')
 plt.show()
 
-# Calculate the accuracy
 train_accuracy = np.sum(np.argmax(model.predict(X_train), axis=0) == np.argmax(Y_train, axis=0)) / Y_train.shape[1]
 test_accuracy = np.sum(np.argmax(model.predict(X_test), axis=0) == np.argmax(Y_test, axis=0)) / Y_test.shape[1]
 
 print("train accuracy:", train_accuracy)
 print("test accuracy:", test_accuracy)
 
-# example
 model.confusion_matrix(X_test, Y_test)
 
 model.save_weights(f"saved_weights {round(test_accuracy, 4) * 100}%")

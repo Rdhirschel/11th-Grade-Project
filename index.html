@@ -112,16 +112,13 @@
                 img.onload = function() {
                     var canvas = document.createElement('canvas');
                     var ctx = canvas.getContext('2d');
-                    //convert to rgb
                     canvas.style.display = 'none';
                     canvas.displayImage = 'none';
 
-                    // Resize the image to 32x32
                     canvas.width = 32;
                     canvas.height = 32;
                     ctx.drawImage(img, 0, 0, 32, 32);
 
-                    // Get the pixel data
                     var pixelData = ctx.getImageData(0, 0, 32, 32).data;
                     var rgbData = [];
                     for (var i = 0; i < pixelData.length; i += 4) {
