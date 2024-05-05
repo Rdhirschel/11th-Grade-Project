@@ -11,8 +11,6 @@
             font-family: Arial, sans-serif;
         }
 
-        
-
         body {
             background-color: #93b8d1;
         }
@@ -89,11 +87,10 @@
         View on GitHub
     </button>
     <div style="justify-content: flex-end;">
-        <h4 style="margin:7px;">Upload an image of a flower to classify it</h4>
-        <div id="imageContainer" class="imageContainer"></div>
+        <h4 style="margin:7px;">Upload or drag an image of a flower to classify it</h4>
+        <div id="imageContainer" class="imageContainer" ondrop="drop(event)" ondragover="allowDrop(event)"></div>        
         <img id="uploadedImage" src="#" alt="Uploaded Image" style="display: none;">
-        <input type="file" id="imageUpload" accept="image/*" onchange="displayImage(event)" style="display: none;">   
-        <button onclick="document.getElementById('imageUpload').click()">Upload Image</button> 
+        <input type="file" id="imageUpload" accept="image/*" onchange="displayImage(this.files[0])" style="display: none;">        <button onclick="document.getElementById('imageUpload').click()">Upload Image</button> 
         <button id="classify">Classify</button>
         <h2 id="result"></h2>
 
@@ -101,8 +98,13 @@
     
 
     <script>
+        var lastFile;
         document.getElementById('classify').addEventListener('click', function() {
-            var imageFile = document.getElementById('imageUpload').files[0];
+            if (!lastFile) {
+                document.getElementById('result').innerText = "Please upload an image first";
+                return;
+            }
+            var imageFile = lastFile;
             var reader = new FileReader();
 
             reader.onload = function(e) {
@@ -149,21 +151,34 @@
             };
             document.getElementById('result').innerText = "";
             document.getElementById('result').classList.add('loading');
-            // read the json information
             reader.readAsDataURL(imageFile);
         });
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
 
-        async function displayImage(event) {
+        function drop(ev) {
+            ev.preventDefault();
+            var data = ev.dataTransfer.items;
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].kind === 'file') {
+                    var file = data[i].getAsFile();
+                    displayImage(file);
+                }
+            }
+        }
+
+        async function displayImage(file) {
+            lastFile = file;
             const uploadedImage = document.getElementById('uploadedImage');
             const imageContainer = document.getElementById('imageContainer');
             const label = document.getElementById('result');
             label.innerText = "";
             label.classList.remove('loading');
-            uploadedImage.src = URL.createObjectURL(event.target.files[0]);
+            uploadedImage.src = URL.createObjectURL(file);
             imageContainer.style.backgroundImage = `url(${uploadedImage.src})`;
             imageContainer.style.backgroundSize = 'cover';
         }
-        
     </script>
 </body>
 </html>
